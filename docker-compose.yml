@@ -1,0 +1,55 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai-study-assistant-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - APP_URL=${APP_URL:-http://localhost:3000}
+      - MONGODB_URI=mongodb://${MONGODB_USER:-study_user}:${MONGODB_PASSWORD:-study_secure_password}@mongodb:27017/${MONGODB_DATABASE:-ai-study-assistant}?authSource=admin
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
+      - AUTH_SECRET=${AUTH_SECRET}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - study-network
+
+  mongodb:
+    image: mongo:7-jammy
+    container_name: ai-study-assistant-mongodb
+    restart: unless-stopped
+    # Port 27017 is NOT exposed to host/internet for security: internal network only
+    expose:
+      - "27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-admin_super_secure_password}
+      MONGO_INITDB_DATABASE: ${MONGODB_DATABASE:-ai-study-assistant}
+    volumes:
+      - mongodb_data:/data/db
+      - ./scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - study-network
+
+networks:
+  study-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local

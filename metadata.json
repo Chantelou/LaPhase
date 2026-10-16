@@ -1,0 +1,6 @@
+{
+  "name": "Erick AI",
+  "description": "Assistant pédagogique intelligent d'apprentissage pour étudiants avec requêtes vocales, analyse de documents PDF/images, vidéos YouTube et fiches de révision",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
